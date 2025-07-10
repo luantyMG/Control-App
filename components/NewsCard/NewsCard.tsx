@@ -9,16 +9,9 @@ export default function NewsCard({ avatarUrl, title, date, description, imageUrl
 
   return (
     <View
-      style={[
-        styles.container,
-        {
-          backgroundColor: colors.card,
-          shadowColor: colors.border,
-          // Opcional: border
-          borderColor: colors.border,
-          borderWidth: 1,
-        },
-      ]}
+      style={
+        styles.container
+      }
     >
       <View style={styles.containerHeader}>
         <Image source={{ uri: avatarUrl }} style={styles.avatar} />
