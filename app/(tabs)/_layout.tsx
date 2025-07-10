@@ -28,15 +28,7 @@ function InnerTabs() {
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            position: 'absolute',
-            backgroundColor: colors.background,
-          },
-          default: {
-            backgroundColor: colors.background,
-          },
-        }),
+       
       }}
     >
       <Tabs.Screen
