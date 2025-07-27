@@ -16,6 +16,7 @@ export interface ThemeColors {
 export interface ThemeContextProps {
     colors: ThemeColors;
     toggleTheme: () => void;
+    isDarkTheme: boolean;
 }
 
 export interface ThemeProviderProps {

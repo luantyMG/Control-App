@@ -51,14 +51,13 @@ export const ThemeProvider = ({ children }: ThemeProviderProps): JSX.Element => 
   }, [isDarkTheme]);
 
   if (isDarkTheme === null) {
-    // Mientras carga el tema (opcional: podrías poner un splash o loader)
     return null;
   }
 
   const colors: ThemeColors = isDarkTheme ? darkTheme : lightTheme;
 
   return (
-    <ThemeContext.Provider value={{ colors, toggleTheme }}>
+    <ThemeContext.Provider value={{ colors, toggleTheme, isDarkTheme }}>
       {children}
     </ThemeContext.Provider>
   );

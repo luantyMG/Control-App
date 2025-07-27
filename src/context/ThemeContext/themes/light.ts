@@ -3,7 +3,7 @@ import { ThemeColors } from '../types';
 export const lightTheme: ThemeColors = {
   background: '#FFFFFF',
   text: '#000000',
-  primary: '#6200EE',
+  primary: '#007960',
   secondary: '#03DAC6',
   border: '#E0E0E0',
   card: '#F5F5F5',
