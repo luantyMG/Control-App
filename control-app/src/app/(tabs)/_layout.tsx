@@ -1,18 +1,30 @@
-import { Tabs } from 'expo-router';
+import { Tabs, Redirect } from 'expo-router';
 import React from 'react';
+import { View, ActivityIndicator } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { HapticTab } from '../../components/HapticTab';
 import { IconSymbol } from '../../components/ui/IconSymbol';
 import TabBarBackground from '../../components/ui/TabBarBackground';
-import { ThemeProvider,useTheme } from '../../context/ThemeContext/ThemeContext';
+import { useTheme } from '../../context/ThemeContext/ThemeContext'; // solo el hook
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import { useAuth } from '../../context/AuthContext/AuthContext';
 
 export default function TabLayout() {
-  return (
-    <ThemeProvider>
-      <InnerTabs />
-    </ThemeProvider>
-  );
+  const { token, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  if (!token) {
+    return <Redirect href="/login" />;
+  }
+
+  return <InnerTabs />;
 }
 
 function InnerTabs() {
@@ -26,7 +38,7 @@ function InnerTabs() {
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
-       
+        tabBarStyle: { backgroundColor: colors.card },  // <-- aquí el color de fondo del tab bar
       }}
     >
       <Tabs.Screen
@@ -49,9 +61,7 @@ function InnerTabs() {
         name="perfil"
         options={{
           title: 'Perfil',
-          tabBarIcon: ({ color }) => (
-            <FontAwesome5 name="user-cog" size={24} color={color} />
-          ),
+          tabBarIcon: ({ color }) => <FontAwesome5 name="user-cog" size={24} color={color} />,
         }}
       />
     </Tabs>

@@ -1,15 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useTheme } from '../../context/ThemeContext/ThemeContext';
+import { useAuth } from '../../context/AuthContext/AuthContext';
 import * as ImagePicker from 'expo-image-picker';
 import TabsLayoutWrapper from '../../components/TabsLayoutWrapper/TabsLayoutWrapper';
+import { useRouter } from 'expo-router';
 
 export default function PerfilScreen() {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [imageUri, setImageUri] = useState<string | null>(null);
   const { colors, isDarkTheme } = useTheme();
+  const { logout } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     checkPermissions();
@@ -35,6 +39,24 @@ export default function PerfilScreen() {
     }
   };
 
+  const handleLogout = () => {
+    Alert.alert(
+      'Cerrar sesión',
+      '¿Estás seguro que quieres cerrar sesión?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Cerrar sesión',
+          style: 'destructive',
+          onPress: async () => {
+            await logout();
+            router.replace('/login'); // Redirige a la pantalla de login
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <TabsLayoutWrapper>
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -52,22 +74,23 @@ export default function PerfilScreen() {
               }
               style={styles.profileImage}
             />
-
             <Text style={[styles.editText, { color: colors.primary }]}>Cambiar foto</Text>
           </TouchableOpacity>
 
           <Text style={[styles.name, { color: colors.text }]}>Luis Alberto Montejo Garcia</Text>
           <Text style={[styles.role, { color: colors.text }]}>Profesional Técnico-Bachiller en Autotrónica</Text>
-              <Text style={[styles.textRol, { color: colors.text }]}>Estudiante</Text>
+          <Text style={[styles.textRol, { color: colors.text }]}>Estudiante</Text>
         </View>
-        
 
         <View style={styles.actionsContainer}>
           <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.card }]}>
             <Text style={[styles.actionText, { color: colors.text }]}>Configuración</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.card }]}>
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: colors.card }]}
+            onPress={handleLogout}
+          >
             <Text style={[styles.actionText, { color: colors.text }]}>Cerrar sesión</Text>
           </TouchableOpacity>
         </View>
