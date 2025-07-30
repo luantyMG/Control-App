@@ -35,7 +35,7 @@ export default function NewsScreen() {
   }, []);
 
   return (
-    <TabsLayoutWrapper>
+    <TabsLayoutWrapper style={styles.flex}>
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <StatusBar style={colors.background === '#121212' ? 'light' : 'dark'} />
         <FlatList
@@ -66,11 +66,13 @@ export default function NewsScreen() {
         />
       </SafeAreaView>
     </TabsLayoutWrapper>
-
   );
 }
 
 const styles = StyleSheet.create({
+  flex: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },
