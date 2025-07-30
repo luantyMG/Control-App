@@ -7,7 +7,15 @@ const router = Router();
 // Obtener todos los usuarios
 router.get('/', async (req, res) => {
   try {
-    const users = await prisma.user.findMany();
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+        // NO incluimos password aquí
+      }
+    });
     res.json(users);
   } catch (error) {
     console.error('Error al obtener usuarios:', error);
