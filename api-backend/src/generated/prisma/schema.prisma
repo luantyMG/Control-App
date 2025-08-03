@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+
+  roleId Int?
+  role   Role? @relation(fields: [roleId], references: [id])
+
+  student Student?
+
+  permissions UserPermission[] // 👈 Permisos individuales por usuario
+}
+
+model Role {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  description String?
+
+  users       User[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  description String?
+
+  roles RolePermission[]
+  users UserPermission[] // 👈 Relación inversa para usuarios
+}
+
+model RolePermission {
+  id           Int @id @default(autoincrement())
+  roleId       Int
+  permissionId Int
+
+  role       Role       @relation(fields: [roleId], references: [id])
+  permission Permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([roleId, permissionId])
+}
+
+model UserPermission {
+  id           Int @id @default(autoincrement())
+  userId       Int
+  permissionId Int
+
+  user       User       @relation(fields: [userId], references: [id])
+  permission Permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([userId, permissionId])
+}
+
+model Semester {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  students Student[]
+}
+
+model Career {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  description String?
+
+  students Student[]
+}
+
+model Student {
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id])
+
+  semesterId Int
+  semester   Semester @relation(fields: [semesterId], references: [id])
+
+  careerId Int
+  career   Career @relation(fields: [careerId], references: [id])
+}

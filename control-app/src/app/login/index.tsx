@@ -24,7 +24,7 @@ const LoginScreen: React.FC = () => {
 
     setLoading(true);
     try {
-      const res = await fetch('http://192.168.1.6:4000/users/login', {
+      const res = await fetch('http://192.168.1.70:4000/users/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
