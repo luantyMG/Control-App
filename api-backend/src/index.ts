@@ -1,5 +1,11 @@
 import dotenv from 'dotenv';
-dotenv.config(); // Carga variables desde .env en desarrollo
+
+// Carga el archivo .env correcto según el entorno
+if (process.env.NODE_ENV === 'production') {
+  dotenv.config({ path: '.env.production' });
+} else {
+  dotenv.config({ path: '.env.development' });
+}
 
 import express from 'express';
 import userRoutes from './routes/userRoutes';
