@@ -12,7 +12,7 @@ ________________________________________________________________________________
 
 🧩 Frontend – Expo React Native
 
-⚛️ React Native + Expo Router
+⚛️ React Native Expo Router
 
 🎨 Context API para manejo de temas (light / dark)
 
@@ -24,7 +24,9 @@ ________________________________________________________________________________
 
 ✨ Animaciones y haptics
 _______________________________________________________________________________________
+
 🔙 Backend – Node.js + Express
+
 🛠️ Express.js – API RESTful
 
 🐘 PostgreSQL – Base de datos relacional
