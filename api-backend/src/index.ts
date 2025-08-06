@@ -1,8 +1,8 @@
 import dotenv from 'dotenv';
 
-// Carga .env solo si NO estás en producción
+// Carga variables desde .env si NO estás en producción
 if (process.env.NODE_ENV !== 'production') {
-  dotenv.config({ path: '.env.development' });
+  dotenv.config(); // Por defecto busca .env
 }
 
 import express from 'express';

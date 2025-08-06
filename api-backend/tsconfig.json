@@ -1,15 +1,15 @@
 {
   "compilerOptions": {
-    "target": "es2016",
-    "module": "commonjs",
-    "outDir": "./dist",                 // Carpeta donde se guardará JS compilado
-    "rootDir": "./src",                // Carpeta raíz del código fuente TS
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "skipLibCheck": true,
-    "resolveJsonModule": true          // Útil si importas JSON
+    "target": "es2016",                    // Buen target para Node moderno
+    "module": "commonjs",                  // Necesario para Node.js
+    "outDir": "./dist",                    // Carpeta para JS compilado (perfecto)
+    "rootDir": "./src",                    // Raíz de código fuente TS (correcto)
+    "esModuleInterop": true,               // Facilita importar módulos CommonJS
+    "forceConsistentCasingInFileNames": true, // Evita problemas de mayúsculas/minúsculas
+    "strict": true,                        // Activa chequeos estrictos (muy recomendado)
+    "skipLibCheck": true,                  // Ignora chequeo de tipos en node_modules (reduce errores)
+    "resolveJsonModule": true              // Permite importar archivos JSON (útil)
   },
-  "include": ["src"],                  // Solo compila código dentro de src
-  "exclude": ["node_modules", "dist"] // Ignora node_modules y dist
+  "include": ["src"],                      // Solo compila TS dentro de src
+  "exclude": ["node_modules", "dist"]     // Ignora estas carpetas
 }
