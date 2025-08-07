@@ -3,9 +3,9 @@ import { View, TextInput, Button, Alert, StyleSheet, Text, ActivityIndicator, Im
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext/ThemeContext';
 import { useAuth } from '../../context/AuthContext/AuthContext';
+import { API_BASE_URL } from '../../utils/apiConfig';
 
-
-const logo = require('../../assets/images/bussines/LogoCompany.png'); 
+const logo = require('../../assets/images/bussines/LogoCompany.png');
 
 const LoginScreen: React.FC = () => {
   const router = useRouter();
@@ -24,7 +24,7 @@ const LoginScreen: React.FC = () => {
 
     setLoading(true);
     try {
-      const res = await fetch('http://192.168.100.58:4000/users/login', {
+      const res = await fetch(`${API_BASE_URL}/users/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -33,11 +33,12 @@ const LoginScreen: React.FC = () => {
       const data = await res.json();
 
       if (res.ok) {
-        if (data.token) {
-          await login(data.token);
+        if (data.token && data.user) {
+          // Aquí pasamos el token y el usuario completo al contexto
+          await login(data.token, data.user);
           router.replace('/');
         } else {
-          Alert.alert('Error', 'No se recibió token del servidor');
+          Alert.alert('Error', 'No se recibieron datos completos del servidor');
         }
       } else {
         Alert.alert('Error', data.error || 'Login fallido');
@@ -87,7 +88,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     justifyContent: 'center',
-    alignItems: 'center', // Centra horizontalmente para el logo y demás
+    alignItems: 'center',
   },
   logo: {
     width: 120,
@@ -99,13 +100,13 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     fontWeight: 'bold',
     textAlign: 'center',
-    alignSelf: 'stretch', // Para que tome todo el ancho y el texto quede centrado
+    alignSelf: 'stretch',
   },
   input: {
     marginBottom: 12,
     borderBottomWidth: 1,
     padding: 8,
-    alignSelf: 'stretch', // Para inputs anchos
+    alignSelf: 'stretch',
   },
 });
 

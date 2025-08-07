@@ -6,6 +6,8 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 import express from 'express';
+import path from 'path';
+import multer from 'multer';
 import userRoutes from './routes/userRoutes';
 
 const app = express();
@@ -21,7 +23,26 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 
+// Middleware para parsear JSON
 app.use(express.json());
+
+// Servir archivos estáticos de la carpeta uploads (ajusta la ruta según tu estructura)
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// Configuración multer para guardar en /uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, '../uploads'));
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const extension = path.extname(file.originalname);
+    cb(null, file.fieldname + '-' + uniqueSuffix + extension);
+  },
+});
+export const upload = multer({ storage });
+
+// Rutas
 app.use('/users', userRoutes);
 
 const PORT = process.env.PORT || 4000;

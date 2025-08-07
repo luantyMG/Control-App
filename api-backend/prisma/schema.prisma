@@ -7,24 +7,37 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+//
+// =======================
+// 🌐 AUTH / ROLES / USERS
+// =======================
+//
+
 model User {
-  id        Int       @id @default(autoincrement())
-  name      String
-  email     String    @unique
-  password  String
-  createdAt DateTime  @default(now())
+  id              Int      @id @default(autoincrement())
+  name            String
+  email           String   @unique
+  password        String
+  createdAt       DateTime @default(now())
+  profileImageUrl String?
 
-  roleId    Int?
-  role      Role?     @relation(fields: [roleId], references: [id])
+  roleId Int?
+  role   Role? @relation(fields: [roleId], references: [id])
 
-  student   Student?
+  student Student?
+  teacher Teacher?
+  staff   Staff?
 
-  permissions UserPermission[]  // 👈 Permisos individuales por usuario
+  permissions UserPermission[]
+
+  suggestionBoxEntries SuggestionBoxEntry[]
+  newsPosts            NewsPost[]           @relation("AuthorNewsPosts")
+  studentLinks         StudentTutor[]       @relation("TutorToStudents")
 }
 
 model Role {
-  id          Int               @id @default(autoincrement())
-  name        String            @unique
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
   description String?
 
   users       User[]
@@ -32,59 +45,326 @@ model Role {
 }
 
 model Permission {
-  id          Int               @id @default(autoincrement())
-  name        String            @unique
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
   description String?
 
-  roles       RolePermission[]
-  users       UserPermission[]  // 👈 Relación inversa para usuarios
+  roles RolePermission[]
+  users UserPermission[]
 }
 
 model RolePermission {
-  id           Int         @id @default(autoincrement())
+  id           Int @id @default(autoincrement())
   roleId       Int
   permissionId Int
 
-  role         Role        @relation(fields: [roleId], references: [id])
-  permission   Permission  @relation(fields: [permissionId], references: [id])
+  role       Role       @relation(fields: [roleId], references: [id])
+  permission Permission @relation(fields: [permissionId], references: [id])
 
   @@unique([roleId, permissionId])
 }
 
 model UserPermission {
-  id           Int         @id @default(autoincrement())
+  id           Int @id @default(autoincrement())
   userId       Int
   permissionId Int
 
-  user         User        @relation(fields: [userId], references: [id])
-  permission   Permission  @relation(fields: [permissionId], references: [id])
+  user       User       @relation(fields: [userId], references: [id])
+  permission Permission @relation(fields: [permissionId], references: [id])
 
   @@unique([userId, permissionId])
 }
 
-model Semester {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
+//
+// =======================
+// 🎓 ESTUDIANTES / DOCENTES / PERSONAL / TUTORES
+// =======================
+//
 
-  students  Student[]
+model Student {
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id])
+
+  campusId Int
+  campus   Campus @relation(fields: [campusId], references: [id])
+
+  groupId Int?
+  group   Group? @relation(fields: [groupId], references: [id])
+
+  grades Grade[]
+  tutors StudentTutor[] @relation("StudentToTutors")
+}
+
+model StudentTutor {
+  id        Int @id @default(autoincrement())
+  studentId Int
+  tutorId   Int
+
+  student Student @relation(fields: [studentId], references: [id], name: "StudentToTutors")
+  tutor   User    @relation(fields: [tutorId], references: [id], name: "TutorToStudents")
+
+  @@unique([studentId, tutorId])
+}
+
+model Teacher {
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id])
+
+  campusId Int
+  campus   Campus @relation(fields: [campusId], references: [id])
+
+  teachingAssignments TeachingAssignment[]
+  classSchedules      ClassSchedule[]
+}
+
+model Staff {
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id])
+
+  campusId Int
+  campus   Campus @relation(fields: [campusId], references: [id])
+}
+
+//
+// =======================
+// 🏫 ACADEMIA
+// =======================
+//
+
+model Campus {
+  id           Int     @id @default(autoincrement())
+  name         String  @unique
+  description  String?
+  estado       String?
+  municipio    String?
+  calle        String?
+  numero       String?
+  codigoPostal String?
+  telefono     String?
+
+  groups   Group[]
+  teachers Teacher[]
+  students Student[]
+  staff    Staff[]
 }
 
 model Career {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
+  id          Int     @id @default(autoincrement())
+  clave       String? @unique
+  name        String  @unique
   description String?
 
-  students    Student[]
+  subjects Subject[]
+  groups   Group[]
 }
 
-model Student {
-  id         Int      @id @default(autoincrement())
-  userId     Int      @unique
-  user       User     @relation(fields: [userId], references: [id])
+model Semester {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  groups   Group[]
+  subjects Subject[]
+}
+
+model Group {
+  id         Int    @id @default(autoincrement())
+  name       String
+  semesterId Int
+  careerId   Int
+  campusId   Int
+
+  semester Semester @relation(fields: [semesterId], references: [id])
+  career   Career   @relation(fields: [careerId], references: [id])
+  campus   Campus   @relation(fields: [campusId], references: [id])
+
+  students            Student[]
+  classSchedules      ClassSchedule[]
+  grades              Grade[]
+  teachingAssignments TeachingAssignment[]
+}
+
+//
+// =======================
+// 📚 MATERIAS
+// =======================
+//
+
+model Subject {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+
+  careerId Int
+  career   Career @relation(fields: [careerId], references: [id])
 
   semesterId Int
   semester   Semester @relation(fields: [semesterId], references: [id])
 
-  careerId   Int
-  career     Career   @relation(fields: [careerId], references: [id])
+  teachingAssignments TeachingAssignment[]
+  grades              Grade[]
+  classSchedules      ClassSchedule[]
+}
+
+model TeachingAssignment {
+  id        Int @id @default(autoincrement())
+  teacherId Int
+  subjectId Int
+  groupId   Int
+
+  teacher Teacher @relation(fields: [teacherId], references: [id])
+  subject Subject @relation(fields: [subjectId], references: [id])
+  group   Group   @relation(fields: [groupId], references: [id])
+
+  @@unique([teacherId, subjectId, groupId])
+}
+
+//
+// =======================
+// 📝 CALIFICACIONES
+// =======================
+//
+
+model Grade {
+  id        Int   @id @default(autoincrement())
+  studentId Int
+  subjectId Int
+  groupId   Int
+  value     Float
+
+  student Student @relation(fields: [studentId], references: [id])
+  subject Subject @relation(fields: [subjectId], references: [id])
+  group   Group   @relation(fields: [groupId], references: [id])
+
+  @@unique([studentId, subjectId, groupId])
+}
+
+//
+// =======================
+// 📆 HORARIOS
+// =======================
+//
+
+enum WeekDay {
+  Lunes
+  Martes
+  Miercoles
+  Jueves
+  Viernes
+  Sabado
+}
+
+model ClassSchedule {
+  id        Int @id @default(autoincrement())
+  subjectId Int
+  teacherId Int
+  groupId   Int
+
+  dayOfWeek WeekDay
+  startTime String
+  endTime   String
+  room      String?
+
+  subject Subject @relation(fields: [subjectId], references: [id])
+  teacher Teacher @relation(fields: [teacherId], references: [id])
+  group   Group   @relation(fields: [groupId], references: [id])
+}
+
+//
+// =======================
+// 📨 BUZÓN DE QUEJAS/SUGERENCIAS
+// =======================
+//
+
+model SuggestionType {
+  id          Int                  @id @default(autoincrement())
+  name        String               @unique
+  description String?
+  entries     SuggestionBoxEntry[]
+}
+
+model SuggestionStatus {
+  id          Int                  @id @default(autoincrement())
+  name        String               @unique
+  description String?
+  entries     SuggestionBoxEntry[]
+}
+
+model SuggestionBoxEntry {
+  id       Int  @id @default(autoincrement())
+  userId   Int?
+  typeId   Int
+  statusId Int
+
+  anonymous Boolean  @default(false)
+  message   String
+  response  String?
+  createdAt DateTime @default(now())
+
+  user   User?            @relation(fields: [userId], references: [id])
+  type   SuggestionType   @relation(fields: [typeId], references: [id])
+  status SuggestionStatus @relation(fields: [statusId], references: [id])
+}
+
+//
+// =======================
+// 📰 NOTICIAS / COMUNICADOS
+// =======================
+//
+
+model NewsPost {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  imageUrl    String?
+  category    String?
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  authorId Int
+  author   User @relation(fields: [authorId], references: [id], name: "AuthorNewsPosts")
+}
+
+//
+// =======================
+// 📘 NORMATIVAS
+// =======================
+//
+
+model Policy {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  fileUrl     String?
+  createdAt   DateTime @default(now())
+}
+
+//
+// =======================
+// 🤝 CONVENIOS
+// =======================
+//
+
+model Agreement {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  fileUrl     String?
+  createdAt   DateTime @default(now())
+}
+
+//
+// =======================
+// ⚙️ CONFIGURACIÓN DEL SISTEMA
+// =======================
+//
+
+model SystemSetting {
+  id    Int     @id @default(autoincrement())
+  key   String  @unique
+  value String
+  type  String?
 }

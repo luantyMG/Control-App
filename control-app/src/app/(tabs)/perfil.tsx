@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useTheme } from '../../context/ThemeContext/ThemeContext';
@@ -11,13 +19,20 @@ import { useRouter } from 'expo-router';
 export default function PerfilScreen() {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const { colors, isDarkTheme } = useTheme();
-  const { logout } = useAuth();
+  const { logout, user, token, updateUser } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     checkPermissions();
   }, []);
+
+  useEffect(() => {
+    if (user?.profileImageUrl) {
+      setImageUri(user.profileImageUrl);
+    }
+  }, [user]);
 
   const checkPermissions = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -25,17 +40,77 @@ export default function PerfilScreen() {
   };
 
   const pickImage = async () => {
-    if (!hasPermission) return;
+    if (!hasPermission) {
+      Alert.alert(
+        'Permiso denegado',
+        'Necesitamos permiso para acceder a la galería.'
+      );
+      return;
+    }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+     mediaTypes: 'images',
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.7,
     });
 
-    if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
+    if (!result.canceled && result.assets.length > 0) {
+      const localUri = result.assets[0].uri;
+      setImageUri(localUri);
+
+      // Subimos la imagen al backend
+      await uploadImage(localUri);
+    }
+  };
+
+  const uploadImage = async (uri: string) => {
+    if (!token) {
+      Alert.alert('Error', 'No estás autenticado.');
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const formData = new FormData();
+      const uriParts = uri.split('.');
+      const fileType = uriParts[uriParts.length - 1];
+
+      formData.append('profileImage', {
+        uri,
+        name: `profile.${fileType}`,
+        type: `image/${fileType === 'jpg' ? 'jpeg' : fileType}`,
+      } as any);
+
+      const response = await fetch(
+        `http://192.168.100.43:4000/users/upload-profile-image/${user?.id}`,
+        {
+          method: 'POST',
+          headers: {
+            // IMPORTANTE: No uses Content-Type aquí, deja que fetch lo gestione con multipart/form-data
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Error al subir la imagen');
+      }
+
+      const data = await response.json();
+
+      if (data.user) {
+        updateUser(data.user);
+        setImageUri(data.user.profileImageUrl);
+      } else {
+        Alert.alert('Error', 'No se recibió información del usuario actualizada.');
+      }
+    } catch (error) {
+      Alert.alert('Error', (error as Error).message);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -50,7 +125,7 @@ export default function PerfilScreen() {
           style: 'destructive',
           onPress: async () => {
             await logout();
-            router.replace('/login'); // Redirige a la pantalla de login
+            router.replace('/login');
           },
         },
       ]
@@ -63,28 +138,45 @@ export default function PerfilScreen() {
         <StatusBar style={isDarkTheme ? 'light' : 'dark'} />
 
         <View style={styles.profileContainer}>
-          <TouchableOpacity onPress={pickImage}>
+          <TouchableOpacity onPress={pickImage} disabled={uploading}>
             <Image
               source={
                 imageUri
                   ? { uri: imageUri }
                   : isDarkTheme
-                    ? require('../../assets/images/iconos/usuario-dark.png')
-                    : require('../../assets/images/iconos/usuario-light.png')
+                  ? require('../../assets/images/iconos/usuario-dark.png')
+                  : require('../../assets/images/iconos/usuario-light.png')
               }
               style={styles.profileImage}
             />
-            <Text style={[styles.editText, { color: colors.primary }]}>Cambiar foto</Text>
+            {uploading ? (
+              <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 8 }} />
+            ) : (
+              <Text style={[styles.editText, { color: colors.primary }]}>Cambiar foto</Text>
+            )}
           </TouchableOpacity>
 
-          <Text style={[styles.name, { color: colors.text }]}>Luis Alberto Montejo Garcia</Text>
-          <Text style={[styles.role, { color: colors.text }]}>Profesional Técnico-Bachiller en Autotrónica</Text>
-          <Text style={[styles.textRol, { color: colors.text }]}>Estudiante</Text>
+          <Text style={[styles.name, { color: colors.text }]}>
+            {user?.name || 'Nombre no disponible'}
+          </Text>
+
+          <Text style={[styles.role, { color: colors.text }]}>
+            {user?.role?.name === 'Estudiante' &&
+              (user?.student?.group?.career?.name || 'Carrera no disponible')}
+          </Text>
+
+          <Text style={[styles.textRol, { color: colors.text }]}>
+            {user?.role?.name || 'Rol desconocido'}
+          </Text>
         </View>
 
         <View style={styles.actionsContainer}>
           <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.card }]}>
             <Text style={[styles.actionText, { color: colors.text }]}>Configuración</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.card }]}>
+            <Text style={[styles.actionText, { color: colors.text }]}>Configuración del sitio</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
