@@ -7,6 +7,9 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  FlatList,
+  ScrollView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -15,6 +18,7 @@ import { useAuth } from '../../context/AuthContext/AuthContext';
 import * as ImagePicker from 'expo-image-picker';
 import TabsLayoutWrapper from '../../components/TabsLayoutWrapper/TabsLayoutWrapper';
 import { useRouter } from 'expo-router';
+import { API_BASE_URL } from '../../utils/apiConfig';
 
 export default function PerfilScreen() {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
@@ -23,6 +27,15 @@ export default function PerfilScreen() {
   const { colors, isDarkTheme } = useTheme();
   const { logout, user, token, updateUser } = useAuth();
   const router = useRouter();
+
+  // Estilos dinámicos para aplicar colores del tema
+  const dynamicStyles = {
+    text: { color: colors.text },
+    primary: { color: colors.primary },
+    mutedText: { color: colors.mutedText },
+    cardBackground: { backgroundColor: colors.card },
+    buttonBackground: { backgroundColor: colors.primary, shadowColor: colors.primary },
+  };
 
   useEffect(() => {
     checkPermissions();
@@ -35,60 +48,72 @@ export default function PerfilScreen() {
   }, [user]);
 
   const checkPermissions = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    setHasPermission(status === 'granted');
+    if (Platform.OS === 'android' && Platform.Version >= 33) {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      setHasPermission(status === 'granted');
+    } else {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      setHasPermission(status === 'granted');
+    }
   };
 
   const pickImage = async () => {
     if (!hasPermission) {
-      Alert.alert(
-        'Permiso denegado',
-        'Necesitamos permiso para acceder a la galería.'
-      );
+      Alert.alert('Permiso denegado', 'Necesitamos permiso para acceder a la galería.');
       return;
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-     mediaTypes: 'images',
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.7,
-    });
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+      });
 
-    if (!result.canceled && result.assets.length > 0) {
-      const localUri = result.assets[0].uri;
-      setImageUri(localUri);
+      if (!result.canceled && result.assets.length > 0) {
+        const localUri = result.assets[0].uri;
+        const previousUri = imageUri;
+        setImageUri(localUri);
 
-      // Subimos la imagen al backend
-      await uploadImage(localUri);
+        try {
+          await uploadImage(localUri);
+        } catch (error) {
+          setImageUri(previousUri);
+          Alert.alert('Error', (error as Error).message);
+        }
+      }
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo seleccionar la imagen.');
     }
   };
 
   const uploadImage = async (uri: string) => {
     if (!token) {
-      Alert.alert('Error', 'No estás autenticado.');
-      return;
+      throw new Error('No estás autenticado.');
     }
 
     setUploading(true);
 
     try {
       const formData = new FormData();
-      const uriParts = uri.split('.');
-      const fileType = uriParts[uriParts.length - 1];
 
+      const uriParts = uri.split('.');
+      const fileType = uriParts[uriParts.length - 1].toLowerCase();
+      const mimeType = fileType === 'jpg' ? 'image/jpeg' : `image/${fileType}`;
+
+      // @ts-ignore
       formData.append('profileImage', {
         uri,
         name: `profile.${fileType}`,
-        type: `image/${fileType === 'jpg' ? 'jpeg' : fileType}`,
-      } as any);
+        type: mimeType,
+      });
 
       const response = await fetch(
-        `http://192.168.100.43:4000/users/upload-profile-image/${user?.id}`,
+        `${API_BASE_URL}/users/upload-profile-image/${user?.id}`,
         {
           method: 'POST',
           headers: {
-            // IMPORTANTE: No uses Content-Type aquí, deja que fetch lo gestione con multipart/form-data
             Authorization: `Bearer ${token}`,
           },
           body: formData,
@@ -105,87 +130,103 @@ export default function PerfilScreen() {
         updateUser(data.user);
         setImageUri(data.user.profileImageUrl);
       } else {
-        Alert.alert('Error', 'No se recibió información del usuario actualizada.');
+        throw new Error('No se recibió información actualizada del usuario.');
       }
-    } catch (error) {
-      Alert.alert('Error', (error as Error).message);
     } finally {
       setUploading(false);
     }
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      'Cerrar sesión',
-      '¿Estás seguro que quieres cerrar sesión?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Cerrar sesión',
-          style: 'destructive',
-          onPress: async () => {
-            await logout();
-            router.replace('/login');
-          },
+    Alert.alert('Cerrar sesión', '¿Estás seguro que quieres cerrar sesión?', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Cerrar sesión',
+        style: 'destructive',
+        onPress: async () => {
+          await logout();
+          router.replace('/login');
         },
-      ]
-    );
+      },
+    ]);
   };
+
+  const actionButtons = [
+    { id: 'config', label: 'Configuración', onPress: () => {}, accessibilityLabel: 'Configuración' },
+    { id: 'site-config', label: 'Configuración del sitio', onPress: () => {}, accessibilityLabel: 'Configuración del sitio' },
+    { id: 'logout', label: 'Cerrar sesión', onPress: handleLogout, accessibilityLabel: 'Cerrar sesión' },
+  ];
 
   return (
     <TabsLayoutWrapper>
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
         <StatusBar style={isDarkTheme ? 'light' : 'dark'} />
+        <ScrollView contentContainerStyle={styles.container}>
+          <View style={styles.profileContainer}>
+            <TouchableOpacity
+              onPress={pickImage}
+              disabled={uploading}
+              accessibilityLabel="Cambiar foto de perfil"
+              accessibilityRole="button"
+            >
+              <Image
+                source={
+                  imageUri
+                    ? { uri: imageUri }
+                    : isDarkTheme
+                      ? require('../../assets/images/iconos/usuario-dark.png')
+                      : require('../../assets/images/iconos/usuario-light.png')
+                }
+                style={[styles.profileImage, { borderColor: colors.primary, backgroundColor: colors.card }]}
+              />
+              {uploading ? (
+                <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 8 }} />
+              ) : (
+                <Text style={[styles.editText, dynamicStyles.primary]}>Cambiar foto</Text>
+              )}
+            </TouchableOpacity>
 
-        <View style={styles.profileContainer}>
-          <TouchableOpacity onPress={pickImage} disabled={uploading}>
-            <Image
-              source={
-                imageUri
-                  ? { uri: imageUri }
-                  : isDarkTheme
-                  ? require('../../assets/images/iconos/usuario-dark.png')
-                  : require('../../assets/images/iconos/usuario-light.png')
-              }
-              style={styles.profileImage}
-            />
-            {uploading ? (
-              <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 8 }} />
-            ) : (
-              <Text style={[styles.editText, { color: colors.primary }]}>Cambiar foto</Text>
+            <Text style={[styles.textRol, dynamicStyles.mutedText]}>
+              {user?.role?.name || 'Rol desconocido'}
+            </Text>
+
+            <Text style={[styles.name, dynamicStyles.text]}>
+              {user?.name || 'Nombre no disponible'}
+            </Text>
+
+            <Text style={[styles.campusText, dynamicStyles.mutedText]}>
+              {user?.student?.group?.campus?.name ||
+                user?.teacher?.campus?.name ||
+                user?.staff?.campus?.name ||
+                'Campus no disponible'}
+            </Text>
+
+            <Text style={[styles.role, dynamicStyles.mutedText]}>
+              {user?.role?.name === 'Estudiante'
+                ? user?.student?.group?.career?.name || 'Carrera no disponible'
+                : null}
+            </Text>
+          </View>
+
+          <FlatList
+            data={actionButtons}
+            keyExtractor={(item) => item.id}
+            scrollEnabled={false}
+            contentContainerStyle={styles.actionsContainer}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                activeOpacity={0.7}
+                disabled={uploading}
+                style={[styles.actionButton, dynamicStyles.buttonBackground]}
+                onPress={item.onPress}
+                accessibilityLabel={item.accessibilityLabel}
+                accessibilityRole="button"
+              >
+                <Text style={[styles.actionText]}>{item.label}</Text>
+              </TouchableOpacity>
             )}
-          </TouchableOpacity>
-
-          <Text style={[styles.name, { color: colors.text }]}>
-            {user?.name || 'Nombre no disponible'}
-          </Text>
-
-          <Text style={[styles.role, { color: colors.text }]}>
-            {user?.role?.name === 'Estudiante' &&
-              (user?.student?.group?.career?.name || 'Carrera no disponible')}
-          </Text>
-
-          <Text style={[styles.textRol, { color: colors.text }]}>
-            {user?.role?.name || 'Rol desconocido'}
-          </Text>
-        </View>
-
-        <View style={styles.actionsContainer}>
-          <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.card }]}>
-            <Text style={[styles.actionText, { color: colors.text }]}>Configuración</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.card }]}>
-            <Text style={[styles.actionText, { color: colors.text }]}>Configuración del sitio</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: colors.card }]}
-            onPress={handleLogout}
-          >
-            <Text style={[styles.actionText, { color: colors.text }]}>Cerrar sesión</Text>
-          </TouchableOpacity>
-        </View>
+          />
+        </ScrollView>
       </SafeAreaView>
     </TabsLayoutWrapper>
   );
@@ -193,53 +234,75 @@ export default function PerfilScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     padding: 20,
+    paddingBottom: 80,
   },
   profileContainer: {
     alignItems: 'center',
-    marginTop: 40,
+    marginTop: 20,
+    marginBottom: 30,
+    paddingHorizontal: 10,
   },
   profileImage: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
     borderWidth: 3,
-    borderColor: '#aaa',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 5,
+    elevation: 5,
   },
   editText: {
-    marginTop: 8,
+    marginTop: 10,
     fontSize: 14,
+    fontWeight: '600',
     textAlign: 'center',
   },
   name: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '700',
     marginTop: 20,
+    textAlign: 'center',
+    letterSpacing: 0.5,
+  },
+  textRol: {
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginTop: 6,
+  },
+  campusText: {
+    fontSize: 16,
+    marginTop: 6,
+    fontStyle: 'italic',
+    textAlign: 'center',
   },
   role: {
-    textAlign: 'center',
     fontSize: 16,
-    marginTop: 5,
+    marginTop: 8,
     fontStyle: 'italic',
+    textAlign: 'center',
   },
   actionsContainer: {
     marginTop: 40,
     gap: 15,
+    paddingHorizontal: 10,
   },
   actionButton: {
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderRadius: 10,
+    paddingVertical: 16,
+    paddingHorizontal: 25,
+    borderRadius: 12,
     alignItems: 'center',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 7,
+    elevation: 8,
   },
   actionText: {
     fontSize: 16,
-    fontWeight: '500',
-  },
-  textRol: {
-    fontSize: 20,
     fontWeight: '600',
-    textAlign: 'center',
+    color: '#fff',
   },
 });

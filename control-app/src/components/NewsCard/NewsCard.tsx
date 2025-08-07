@@ -8,11 +8,7 @@ export default function NewsCard({ avatarUrl, title, date, description, imageUrl
   const { colors } = useTheme();
 
   return (
-    <View
-      style={
-        styles.container
-      }
-    >
+    <View style={[styles.container, { backgroundColor: colors.card, borderColor: colors.border, shadowColor: colors.isDark ? '#000' : '#AAA' }]}>
       <View style={styles.containerHeader}>
         <Image source={{ uri: avatarUrl }} style={styles.avatar} />
         <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
@@ -22,7 +18,9 @@ export default function NewsCard({ avatarUrl, title, date, description, imageUrl
 
       <Text style={[styles.description, { color: colors.text }]}>{description}</Text>
 
-      <Image source={{ uri: imageUrl }} style={styles.image} />
+      {imageUrl ? (
+        <Image source={{ uri: imageUrl }} style={styles.image} />
+      ) : null}
     </View>
   );
 }

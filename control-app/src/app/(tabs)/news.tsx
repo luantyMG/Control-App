@@ -10,7 +10,7 @@ import TabsLayoutWrapper from '../../components/TabsLayoutWrapper/TabsLayoutWrap
 const PAGE_SIZE = 5;
 
 export default function NewsScreen() {
-  const { colors } = useTheme();
+  const { colors, isDarkTheme } = useTheme();
 
   const [page, setPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
@@ -37,7 +37,8 @@ export default function NewsScreen() {
   return (
     <TabsLayoutWrapper style={styles.flex}>
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        <StatusBar style={colors.background === '#121212' ? 'light' : 'dark'} />
+        <StatusBar style={isDarkTheme ? 'light' : 'dark'} />
+
         <FlatList
           data={data}
           keyExtractor={(item) => item.id.toString()}
@@ -48,19 +49,18 @@ export default function NewsScreen() {
               date={item.date}
               description={item.description}
               imageUrl={item.imageUrl}
+              // Puedes pasar colors si NewsCard acepta
+              // colors={colors}
             />
           )}
-          contentContainerStyle={{
-            paddingTop: 10,
-            paddingBottom: 20,
-          }}
+          contentContainerStyle={styles.listContent}
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
           refreshing={refreshing}
           onRefresh={onRefresh}
           ListFooterComponent={() =>
             data.length < newsData.length ? (
-              <ActivityIndicator size="large" color={colors.primary} />
+              <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
             ) : null
           }
         />
@@ -75,5 +75,12 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+  },
+  listContent: {
+    paddingTop: 10,
+    paddingBottom: 20,
+  },
+  loader: {
+    marginVertical: 20,
   },
 });

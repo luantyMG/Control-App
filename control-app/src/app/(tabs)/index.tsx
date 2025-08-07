@@ -11,7 +11,6 @@ export default function HomeScreen() {
   const { user } = useAuth();
 
   const userRole = user?.role?.name;
-
   const isStudentOrTutor = userRole === 'Estudiante' || userRole === 'Tutor';
 
   return (
@@ -25,7 +24,7 @@ export default function HomeScreen() {
 
           {/* Mostrar carrera solo si es Estudiante */}
           {userRole === 'Estudiante' && (
-            <Text style={[styles.textCarrera, { color: colors.text }]}>
+            <Text style={[styles.textCarrera, { color: colors.mutedText }]}>
               {user?.student?.group?.career?.name || 'Carrera no disponible'}
             </Text>
           )}
@@ -40,17 +39,45 @@ export default function HomeScreen() {
           {/* Mostrar estos solo si es Estudiante o Tutor */}
           {isStudentOrTutor && (
             <>
-              <CardButton imageSource={require('../../assets/images/iconos/reloj.png')} textCard="Horarios" onPress={() => {}} />
-              <CardButton imageSource={require('../../assets/images/iconos/library.png')} textCard="Academia" onPress={() => {}} />
-              <CardButton imageSource={require('../../assets/images/iconos/boleta.png')} textCard="Calificaciones" onPress={() => {}} />
+              <CardButton
+                imageSource={require('../../assets/images/iconos/reloj.png')}
+                textCard="Horarios"
+                onPress={() => {}}
+              />
+              <CardButton
+                imageSource={require('../../assets/images/iconos/library.png')}
+                textCard="Academia"
+                onPress={() => {}}
+              />
+              <CardButton
+                imageSource={require('../../assets/images/iconos/boleta.png')}
+                textCard="Calificaciones"
+                onPress={() => {}}
+              />
             </>
           )}
 
           {/* Estos se muestran a todos */}
-          <CardButton imageSource={require('../../assets/images/iconos/buzon.png')} textCard="Buzón de Quejas o Sugerencias" onPress={() => {}} />
-          <CardButton imageSource={require('../../assets/images/iconos/proceso.png')} textCard="Configuración" onPress={() => {}} />
-          <CardButton imageSource={require('../../assets/images/iconos/normativas.png')} textCard="Normativas" onPress={() => {}} />
-          <CardButton imageSource={require('../../assets/images/iconos/convenio.png')} textCard="Convenios" onPress={() => {}} />
+          <CardButton
+            imageSource={require('../../assets/images/iconos/buzon.png')}
+            textCard="Buzón de Quejas o Sugerencias"
+            onPress={() => {}}
+          />
+          <CardButton
+            imageSource={require('../../assets/images/iconos/proceso.png')}
+            textCard="Configuración"
+            onPress={() => {}}
+          />
+          <CardButton
+            imageSource={require('../../assets/images/iconos/normativas.png')}
+            textCard="Normativas"
+            onPress={() => {}}
+          />
+          <CardButton
+            imageSource={require('../../assets/images/iconos/convenio.png')}
+            textCard="Convenios"
+            onPress={() => {}}
+          />
         </CardButtonGrid>
       </ScrollView>
     </TabsLayoutWrapper>

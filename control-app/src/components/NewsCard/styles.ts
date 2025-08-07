@@ -1,42 +1,44 @@
-
 import { StyleSheet } from "react-native";
 
 export const styles = StyleSheet.create({
   container: {
     width: '100%',
-    height: 'auto',
-    backgroundColor: 'transparent',  // quitar fondo blanco
     borderRadius: 10,
-    paddingVertical: 15,          
-   shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    elevation: 0,
+    paddingVertical: 15,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+
+    // Sombra para iOS y Android
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+    marginBottom: 15,
   },
   containerHeader: {
     flexDirection: 'row',
     justifyContent: 'flex-start',
+    alignItems: 'center',
     gap: 10,
-  
+    marginBottom: 8,
   },
   title: {
     fontSize: 14,
     fontWeight: 'bold',
-    marginBottom: 5,
+    flexShrink: 1, // para que no se corte si es muy largo
   },
   subText: {
     fontSize: 12,
-    marginBottom: 5,
+    marginBottom: 8,
   },
   description: {
-    fontSize: 18,
-    color: '#666',
+    fontSize: 16,
+    marginBottom: 8,
   },
   image: {
     width: '100%',
     height: 200,
     borderRadius: 10,
-    marginTop: 10,
   },
   avatar: {
     width: 40,
