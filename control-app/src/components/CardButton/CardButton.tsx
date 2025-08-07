@@ -1,9 +1,26 @@
 import React from "react";
 import { Text, TouchableOpacity, View, Image } from "react-native";
+import type { AccessibilityRole } from 'react-native';
 import { styles } from './styles';
 import { useTheme } from '../../context/ThemeContext/ThemeContext';
 
-export default function CardButton({ imageSource, textCard, onPress }) {
+type CardButtonProps = {
+  imageSource: any;
+  textCard: string;
+  onPress: () => void;
+  accessibilityRole?: AccessibilityRole;
+  accessibilityLabel?: string;
+  activeOpacity?: number;
+};
+
+export default function CardButton({
+  imageSource,
+  textCard,
+  onPress,
+  accessibilityRole = "button",
+  accessibilityLabel,
+  activeOpacity = 0.7,
+}: CardButtonProps) {
   const { colors } = useTheme();
 
   return (
@@ -13,18 +30,17 @@ export default function CardButton({ imageSource, textCard, onPress }) {
         { 
           backgroundColor: colors.card,
           borderColor: colors.border,
-          // Sombra ligera para tema claro, menos para oscuro
           shadowColor: colors.isDark ? '#000' : '#AAA',
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: colors.isDark ? 0.3 : 0.15,
           shadowRadius: 4,
-          elevation: 3, // para Android
+          elevation: 3,
         }
       ]}
       onPress={onPress}
-      activeOpacity={0.7}
-      accessibilityRole="button"
-      accessibilityLabel={textCard}
+      activeOpacity={activeOpacity}
+      accessibilityRole={accessibilityRole}
+      accessibilityLabel={accessibilityLabel || textCard}
     >
       <Image source={imageSource} style={styles.iconImage} />
       <View style={styles.textWrapper}>

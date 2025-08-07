@@ -1,9 +1,5 @@
 import dotenv from 'dotenv';
-
-// Carga variables desde .env si NO estás en producción
-if (process.env.NODE_ENV !== 'production') {
-  dotenv.config(); // Por defecto busca .env
-}
+dotenv.config(); // Siempre carga el archivo .env
 
 import express from 'express';
 import path from 'path';
@@ -12,24 +8,31 @@ import userRoutes from './routes/userRoutes';
 
 const app = express();
 
-const isProduction = process.env.NODE_ENV === 'production';
+// Revisa el entorno
+const nodeEnv = process.env.NODE_ENV || 'development';
+const isProduction = nodeEnv === 'production';
 
 console.log(`🧠 Ambiente: ${isProduction ? 'Producción' : 'Desarrollo'}`);
 console.log(`🔌 Conectando a la base de datos: ${process.env.DATABASE_URL}`);
 
-// Verificar que DATABASE_URL esté definida
+// Validaciones
 if (!process.env.DATABASE_URL) {
-  console.error('❌ Error: DATABASE_URL no está definida');
+  console.error('❌ Error: DATABASE_URL no está definida en el archivo .env');
   process.exit(1);
 }
 
-// Middleware para parsear JSON
+if (!process.env.JWT_SECRET) {
+  console.error('❌ Error: JWT_SECRET no está definida en el archivo .env');
+  process.exit(1);
+}
+
+// Middleware
 app.use(express.json());
 
-// Servir archivos estáticos de la carpeta uploads (ajusta la ruta según tu estructura)
+// Archivos estáticos
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Configuración multer para guardar en /uploads
+// Configuración de multer
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, path.join(__dirname, '../uploads'));
@@ -45,6 +48,7 @@ export const upload = multer({ storage });
 // Rutas
 app.use('/users', userRoutes);
 
+// Puerto
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en puerto ${PORT}`);

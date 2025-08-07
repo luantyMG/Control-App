@@ -82,50 +82,139 @@ model UserPermission {
 //
 
 model Student {
-  id     Int  @id @default(autoincrement())
-  userId Int  @unique
-  user   User @relation(fields: [userId], references: [id])
+  id              Int      @id @default(autoincrement())
+  userId          Int      @unique
+  user            User     @relation(fields: [userId], references: [id])
 
-  campusId Int
-  campus   Campus @relation(fields: [campusId], references: [id])
+  campusId        Int
+  campus          Campus   @relation(fields: [campusId], references: [id])
 
-  groupId Int?
-  group   Group? @relation(fields: [groupId], references: [id])
+  groupId         Int?
+  group           Group?   @relation(fields: [groupId], references: [id])
 
-  grades Grade[]
-  tutors StudentTutor[] @relation("StudentToTutors")
+  matricula       String?   @unique
+
+  estatusId       Int?
+  estatus         Estatus? @relation(fields: [estatusId], references: [id])
+
+  generoId        Int?
+  genero          Genero?  @relation(fields: [generoId], references: [id])
+
+  fechaNacimiento DateTime?
+  calle       String?
+  noexterior       String?
+  nointerior       String?
+  estado       String?
+  municipio    String?
+  colonia      String?
+  codigopostal String?
+  telefono        String?
+  email String?
+
+  grades          Grade[]
+  tutors          StudentTutor[] @relation("StudentToTutors")
 }
 
 model StudentTutor {
-  id        Int @id @default(autoincrement())
-  studentId Int
-  tutorId   Int
+  id          Int       @id @default(autoincrement())
+  studentId   Int
+  tutorId     Int
+  parentescoId Int?
 
-  student Student @relation(fields: [studentId], references: [id], name: "StudentToTutors")
-  tutor   User    @relation(fields: [tutorId], references: [id], name: "TutorToStudents")
+  generoId        Int?
+  genero          Genero?  @relation(fields: [generoId], references: [id])
+
+   estatusId       Int?
+  estatus         Estatus? @relation(fields: [estatusId], references: [id])
+
+  fechaNacimiento DateTime?
+  calle       String?
+  noexterior       String?
+  nointerior       String?
+  estado       String?
+  municipio    String?
+  colonia      String?
+  codigopostal String?
+  telefono        String?
+  email String?
+
+  student     Student   @relation(fields: [studentId], references: [id], name: "StudentToTutors")
+  tutor       User      @relation(fields: [tutorId], references: [id], name: "TutorToStudents")
+  parentesco  Parentesco? @relation(fields: [parentescoId], references: [id])
 
   @@unique([studentId, tutorId])
 }
 
 model Teacher {
-  id     Int  @id @default(autoincrement())
-  userId Int  @unique
-  user   User @relation(fields: [userId], references: [id])
+  id              Int      @id @default(autoincrement())
+  userId          Int      @unique
+  user            User     @relation(fields: [userId], references: [id])
 
-  campusId Int
-  campus   Campus @relation(fields: [campusId], references: [id])
+  campusId        Int
+  campus          Campus   @relation(fields: [campusId], references: [id])
+
+  cveempleado     String   @unique
+  puesto          String
+
+  
+
+  estatusId       Int?
+  estatus         Estatus? @relation(fields: [estatusId], references: [id])
+
+  nivelAcademicoId Int?
+  nivelAcademico  NivelAcademico? @relation(fields: [nivelAcademicoId], references: [id])
+
+  generoId        Int?
+  genero          Genero?  @relation(fields: [generoId], references: [id])
+
+  fechaContratacion DateTime?
+ fechaNacimiento DateTime?
+  calle       String?
+  noexterior       String?
+  nointerior       String?
+  estado       String?
+  municipio    String?
+  colonia      String?
+  codigopostal String?
+  telefono        String?
+  email String?
 
   teachingAssignments TeachingAssignment[]
   classSchedules      ClassSchedule[]
 }
 
 model Staff {
-  id     Int  @id @default(autoincrement())
-  userId Int  @unique
-  user   User @relation(fields: [userId], references: [id])
+  id              Int      @id @default(autoincrement())
+  userId          Int      @unique
+  user            User     @relation(fields: [userId], references: [id])
 
-  campusId Int
-  campus   Campus @relation(fields: [campusId], references: [id])
+  campusId        Int
+  campus          Campus   @relation(fields: [campusId], references: [id])
+
+  cveempleado     String   @unique
+  puesto          String
+
+  nivelAcademicoId Int?
+  nivelAcademico  NivelAcademico? @relation(fields: [nivelAcademicoId], references: [id])
+
+  estatusId       Int?
+  estatus         Estatus? @relation(fields: [estatusId], references: [id])
+  generoId        Int?
+  genero          Genero?  @relation(fields: [generoId], references: [id])
+
+  departamentoId  Int?
+  departamento    Departamento? @relation(fields: [departamentoId], references: [id])
+
+  fechaNacimiento DateTime?
+  calle       String?
+  noexterior       String?
+  nointerior       String?
+  estado       String?
+  municipio    String?
+  colonia      String?
+  codigopostal String?
+  telefono        String?
+  email String?
 }
 
 //
@@ -135,8 +224,8 @@ model Staff {
 //
 
 model Campus {
-  id           Int     @id @default(autoincrement())
-  name         String  @unique
+  id           Int      @id @default(autoincrement())
+  name         String   @unique
   description  String?
   estado       String?
   municipio    String?
@@ -152,9 +241,9 @@ model Campus {
 }
 
 model Career {
-  id          Int     @id @default(autoincrement())
-  clave       String? @unique
-  name        String  @unique
+  id          Int      @id @default(autoincrement())
+  clave       String?  @unique
+  name        String   @unique
   description String?
 
   subjects Subject[]
@@ -170,7 +259,7 @@ model Semester {
 }
 
 model Group {
-  id         Int    @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   name       String
   semesterId Int
   careerId   Int
@@ -193,12 +282,12 @@ model Group {
 //
 
 model Subject {
-  id          Int     @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   name        String
   description String?
 
-  careerId Int
-  career   Career @relation(fields: [careerId], references: [id])
+  careerId   Int
+  career     Career   @relation(fields: [careerId], references: [id])
 
   semesterId Int
   semester   Semester @relation(fields: [semesterId], references: [id])
@@ -247,13 +336,13 @@ model Grade {
 // =======================
 //
 
-enum WeekDay {
-  Lunes
-  Martes
-  Miercoles
-  Jueves
-  Viernes
-  Sabado
+// Reemplazamos enum WeekDay por tabla WeekDay para flexibilidad
+
+model WeekDay {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  classSchedules ClassSchedule[]
 }
 
 model ClassSchedule {
@@ -262,7 +351,7 @@ model ClassSchedule {
   teacherId Int
   groupId   Int
 
-  dayOfWeek WeekDay
+  weekDayId Int
   startTime String
   endTime   String
   room      String?
@@ -270,6 +359,7 @@ model ClassSchedule {
   subject Subject @relation(fields: [subjectId], references: [id])
   teacher Teacher @relation(fields: [teacherId], references: [id])
   group   Group   @relation(fields: [groupId], references: [id])
+  weekDay WeekDay @relation(fields: [weekDayId], references: [id])
 }
 
 //
@@ -367,4 +457,57 @@ model SystemSetting {
   key   String  @unique
   value String
   type  String?
+}
+
+//
+// =======================
+// TABLAS PARA TIPOS (reemplazan enums)
+// =======================
+//
+
+model Estatus {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String?
+
+  students Student[]
+  teachers Teacher[]
+  staff    Staff[]
+  studentTutors StudentTutor[]
+}
+
+model Genero {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String?
+
+  students Student[]
+  teachers Teacher[]
+  staff    Staff[]
+  studentTutors StudentTutor[]
+}
+
+model NivelAcademico {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String?
+
+  teachers Teacher[]
+   staff  Staff[]
+}
+
+model Departamento {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String?
+
+  staff Staff[]
+}
+
+model Parentesco {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String?
+
+  studentTutors StudentTutor[]
 }

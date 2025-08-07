@@ -152,8 +152,12 @@ export default function PerfilScreen() {
   };
 
   const actionButtons = [
-    { id: 'config', label: 'Configuración', onPress: () => {}, accessibilityLabel: 'Configuración' },
+    { id: 'change-password', label: 'Cambiar contraseña', onPress: () => {}, accessibilityLabel: 'Cambiar contraseña' },
+    { id: 'edit-profile', label: 'Editar perfil', onPress: () => {}, accessibilityLabel: 'Editar perfil' },
+    { id: 'config', label: 'Configuración de usuario', onPress: () => {}, accessibilityLabel: 'Configuración' },
     { id: 'site-config', label: 'Configuración del sitio', onPress: () => {}, accessibilityLabel: 'Configuración del sitio' },
+    { id: 'terms', label: 'Términos y Condiciones', onPress: () => {}, accessibilityLabel: 'Términos y Condiciones' },
+    { id: 'support', label: 'Soporte / Contacto', onPress: () => {}, accessibilityLabel: 'Soporte' },
     { id: 'logout', label: 'Cerrar sesión', onPress: handleLogout, accessibilityLabel: 'Cerrar sesión' },
   ];
 
